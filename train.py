@@ -123,14 +123,11 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
 
 def get_all_sentences(ds):
     for item in ds:
-        # yield item['translation'][lang] # MODIFICAR?
-        yield item['text'] # MODIFICAT
+        yield item['text']
 
 def get_or_build_tokenizer(config, ds, label): # before input embeddings
-    # tokenizer_path = Path(config['tokenizer_file'].format(lang))
     tokenizer_path = Path(config['tokenizer_file'])
     if not Path.exists(tokenizer_path):
-        # Most code taken from: https://huggingface.co/docs/tokenizers/quicktour
         tokenizer = Tokenizer(WordLevel(unk_token="[UNK]")) # replace unknown words with this
         tokenizer.pre_tokenizer = Whitespace()
         trainer = WordLevelTrainer(special_tokens=["[UNK]", "[PAD]", "[SOS]", "[EOS]"], min_frequency=2)
@@ -141,22 +138,18 @@ def get_or_build_tokenizer(config, ds, label): # before input embeddings
     return tokenizer
 
 def get_ds(config):
-    # It only has the train split, so we divide it overselves
-    # ds_raw = load_dataset(f"{config['datasource']}", f"{config['lang_src']}-{config['lang_tgt']}", split='train')
-    ds_raw = load_dataset(f"{config['datasource']}", split="train") # MODIFICAT
+    ds_raw = load_dataset(f"{config['datasource']}", split="train")
 
     # Build tokenizers
     tokenizer = get_or_build_tokenizer(config, ds_raw, False)
-    tokenizer_lbl = get_or_build_tokenizer(config, ds_raw, True) # MODIFICAT
+    tokenizer_lbl = get_or_build_tokenizer(config, ds_raw, True)
 
-    # Això mes tard ho podem canviar per load_dataset amb split train, test i validation
+    # We can change this later with load_dataset and the diferents splits: train, test and validation
     train_ds_size = int(0.9 * len(ds_raw))
     val_ds_size = len(ds_raw) - train_ds_size
     train_ds_raw, val_ds_raw = random_split(ds_raw, [train_ds_size, val_ds_size])
     
-    # train_ds = GoEmotions(train_ds_raw, tokenizer, config['lang_src'], config['lang_tgt'], config['seq_len'])
     train_ds = GoEmotions(train_ds_raw, tokenizer, config['seq_len'])
-    # val_ds = GoEmotions(val_ds_raw, tokenizer, config['lang_src'], config['lang_tgt'], config['seq_len'])
     val_ds = GoEmotions(val_ds_raw, tokenizer, config['seq_len'])
 
     # Find the maximum length of each sentence in the source and target sentence
@@ -227,8 +220,8 @@ def train_model(config):
         torch.cuda.empty_cache()
         model.train()
         batch_iterator = tqdm(train_dataloader, desc=f"Processing Epoch {epoch:02d}")
-        for batch in batch_iterator:
-        # for batch in train_dataloader:
+        for batch in batch_iterator: # we get an error in this line
+        # RuntimeError: each element in list of batch should be of equal size
 
             encoder_input = batch['encoder_input'].to(device) # (b, seq_len)
             decoder_input = batch['decoder_input'].to(device) # (B, seq_len)

@@ -5,7 +5,7 @@ import math
 class LayerNormalization(nn.Module):
 
     def __init__(self, features: int, eps:float=10**-6) -> None:
-        super().__init__()
+        super().__init__()# MODIFICAR? depenent del dataset tenim train i test, i depenent d'algun altre no
         self.eps = eps
         self.alpha = nn.Parameter(torch.ones(features)) # alpha is a learnable parameter
         self.bias = nn.Parameter(torch.zeros(features)) # bias is a learnable parameter

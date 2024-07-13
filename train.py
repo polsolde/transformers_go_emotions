@@ -84,7 +84,7 @@ def run_validation(model, validation_ds, tokenizer_src, tokenizer_tgt, max_len, 
             model_out = greedy_decode(model, encoder_input, encoder_mask, tokenizer_src, tokenizer_tgt, max_len, device)
 
             source_text = batch["text"][0]
-            target_text = batch["labels"][0]
+            target_text = batch["label"][0]
             model_out_text = tokenizer_tgt.decode(model_out.detach().cpu().numpy())
 
             source_texts.append(source_text)
@@ -158,7 +158,8 @@ def get_ds(config):
 
     for item in ds_raw:
         src_ids = tokenizer.encode(item['text']).ids
-        tgt_ids = tokenizer_lbl.encode(str(item['labels'])).ids
+        tgt_ids = item['labels']
+        # tgt_ids = tokenizer.encode(str(item['labels'])).ids
         max_len_src = max(max_len_src, len(src_ids))
         max_len_tgt = max(max_len_tgt, len(tgt_ids))
 
@@ -166,7 +167,8 @@ def get_ds(config):
     print(f'Max length of target sentence: {max_len_tgt}')
     
 
-    train_dataloader = DataLoader(train_ds, batch_size=config['batch_size'], shuffle=True)
+    # train_dataloader = DataLoader(train_ds, batch_size=config['batch_size'], shuffle=True)
+    train_dataloader = DataLoader(train_ds, batch_size=1, shuffle=True)
     val_dataloader = DataLoader(val_ds, batch_size=1, shuffle=True)
 
     return train_dataloader, val_dataloader, tokenizer
@@ -252,6 +254,13 @@ def train_model(config):
             optimizer.zero_grad(set_to_none=True)
 
             global_step += 1
+
+        # torch.save({
+        #     'epoch': epoch,
+        #     'model_state_dict': model.state_dict(),
+        #     'optimizer_state_dict': optimizer.state_dict(),
+        #     'global_step': global_step
+        # }, model_filename)
 
         # Run validation at the end of every epoch
         run_validation(model, val_dataloader, tokenizer, tokenizer, config['seq_len'], device, lambda msg: batch_iterator.write(msg), global_step, writer)

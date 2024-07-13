@@ -53,7 +53,7 @@ class GoEmotions(Dataset):
             [
                 self.sos_token,
                 torch.tensor(dec_input_tokens, dtype=torch.int64),
-                torch.tensor([self.pad_token] * dec_num_padding_tokens, dtype=torch.int64),
+                torch.tensor([self.pad_token], dtype=torch.int64),
             ],
             dim=0,
         )
@@ -63,21 +63,17 @@ class GoEmotions(Dataset):
             [
                 torch.tensor(dec_input_tokens, dtype=torch.int64),
                 self.eos_token,
-                torch.tensor([self.pad_token] * dec_num_padding_tokens, dtype=torch.int64),
+                torch.tensor([self.pad_token], dtype=torch.int64),
             ],
             dim=0,
         )
-
-        # Double check the size of the tensors to make sure they are all seq_len long
-        assert encoder_input.size(0) == self.seq_len
-        assert decoder_input.size(0) == self.seq_len
-        assert label.size(0) == self.seq_len
 
         return {
             "encoder_input": encoder_input,  # (seq_len)
             "decoder_input": decoder_input,  # (seq_len)
             "encoder_mask": (encoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int(), # (1, 1, seq_len)
-            "decoder_mask": (decoder_input != self.pad_token).unsqueeze(0).int() & causal_mask(decoder_input.size(0)), # (1, seq_len) & (1, seq_len, seq_len),
+            "decoder_mask": (decoder_input != self.pad_token).unsqueeze(0).unsqueeze(0).int(), # (1, 1, seq_len)
+            #"decoder_mask": (decoder_input != self.pad_token).unsqueeze(0).int() & causal_mask(decoder_input.size(0)), # (1, seq_len) & (1, seq_len, seq_len),
             "label": label,  # (seq_len)
             "text": text,
             "tgt": tgt,

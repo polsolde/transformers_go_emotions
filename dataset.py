@@ -59,14 +59,16 @@ class GoEmotions(Dataset):
         )
 
         # Add only </s> token
-        label = torch.cat(
-            [
-                torch.tensor(dec_input_tokens, dtype=torch.int64),
-                self.eos_token,
-                torch.tensor([self.pad_token], dtype=torch.int64),
-            ],
-            dim=0,
-        )
+        # label = torch.cat(
+        #     [
+        #         torch.tensor(dec_input_tokens, dtype=torch.int64),
+        #         self.eos_token,
+        #         torch.tensor([self.pad_token], dtype=torch.int64),
+        #     ],
+        #     dim=0,
+        # )
+
+        label = torch.tensor(dec_input_tokens, dtype=torch.long)
 
         return {
             "encoder_input": encoder_input,  # (seq_len)
